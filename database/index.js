@@ -2,7 +2,7 @@
 
 
 var mongoose = require('mongoose'),
-    config = ('../config.js');
+    config = require('../config.js');
 
 module.exports.connect = function(app) {
     if (app.get('env') === 'production') {
@@ -10,9 +10,8 @@ module.exports.connect = function(app) {
     } else {
         mongoose.connect(config.mongoUrl[0]);
     }
-
     mongoose.connection.once('open', function() {
-        print("Database Connected : ", mongoose.connection.port);
+        console.log("Database Connected : ", mongoose.connection.port);
     });
     mongoose.connection.on('error', function(err) {
         if (err) {

@@ -14,8 +14,11 @@ module.exports = function(schema) {
     };
 
     schema.statics.addUser = function(options, cb) {
-        return this.create(options)
-            .exec(cb);
+        var newEntry = new this();
+        Object.keys(options).forEach(function(key) {
+            newEntry[key] = options[key];
+        });
+        return newEntry.save(cb);
     };
 
     return schema;
