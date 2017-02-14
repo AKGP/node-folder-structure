@@ -2,9 +2,14 @@
 
 
 module.exports = function(req, res, next) {
-
-    res.response = function() {
-        res.send(req.params);
+    var response = {
+        success: true
+    };
+    res.responseSuccess = function(message, data) {
+        response.message = message;
+        response.data = data;
+        res.statusCode = 200;
+        res.send(response);
     };
     next();
 };

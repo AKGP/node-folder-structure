@@ -25,17 +25,23 @@ exports.login = function(req, res, next) {
                 if (err) {
                     cb(err);
                 } else {
-                    cb(null, data);
+                    if (!res) {
+                        cb('INVALID_CREDENTIALS');
+                    } else {
+                        cb(null, data);
+                    }
                 }
             });
         }
     ], function(err, data) {
         if (err) {
-            req.params = err;
-            res.response(err);
+            if (err === 'INVALID_CREDENTIALS') {
+                res.responseError('CUSTOM_ERROR', 'INVALID_CREDENTIALS', 401);
+            } else {
+                res.responseError('DATABASE_ERROR', 'DATABASE_ERROR', 500);
+            }
         } else {
-            req.params = data;
-            res.response(data);
+            res.responseSuccess('LOGIN_SUCCESS', data);
         }
     });
 
@@ -85,11 +91,13 @@ exports.signup = function(req, res, next) {
         }
     ], function(err, data) {
         if (err) {
-            req.params = err;
-            res.response(err);
+            if (err === 'ACCOUNT_EXITS') {
+                res.responseError('CUSTOM_ERROR', 'ACCOUNT_EXITS', 401);
+            } else {
+                res.responseError('DATABASE_ERROR', 'DATABASE_ERROR', 402);
+            }
         } else {
-            req.params = data;
-            res.response(data);
+            res.responseSuccess('SIGNUP_SUCCESS', data);
         }
     });
 };

@@ -28,5 +28,26 @@ utility.validatePassword = function(password, hash, done) {
     });
 };
 
+utility.isValidate = {
+    email: function(email) {
+        return /^[a-zA-Z0-9\-\_\.\+]+@[a-zA-Z0-9\-\_\.]+\.[a-zA-Z0-9\-\_]+$/.test(email);
+    },
+    mobile: function(mobile) {
+        return /^(\+91)?\d{10}$/.test(mobile);
+    },
+    password: function(password) {
+        /** atleast one capital,one small,one number and one special char and minimum 7 digit */
+        return /^(?=.{8,})(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).*$/.test(password);
+    },
+    isNumeric: function(input) {
+        return isFinite(input)
+    },
+    isString: function(input) {
+        return (typeof input === "string" && !isFinite(input) && input !== "");
+    },
+    isUrl: function(input) {
+        return /^(https?)?(:)(\/\/)(www.)?[a-zA-Z0-9_]+\.[a-zA-Z]+((\/([\w]+)?)*)?$/g.test(input);
+    }
+};
 
 module.exports = utility;
