@@ -1,4 +1,5 @@
 var User = require('../../database/schema/user.js'),
+    async = require('async'),
     utility = require('../../utility');
 
 
@@ -9,7 +10,7 @@ exports.login = function(req, res, next) {
             usernmae: req.body.usernmae
         }
     };
-    utility.async.waterfall([
+    async.waterfall([
         function(cb) {
             User.findUser(options, function(err, data) {
                 if (err) {
@@ -44,7 +45,7 @@ exports.login = function(req, res, next) {
                 res.responseError('DATABASE_ERROR', 500, { databaseError: [err] });
             }
         } else {
-            res.responseSuccess('LOGIN_SUCCESS', data);
+            res.responseSuccess('LOGIN_SUCCESS', utility.removeConfidentialData(data, ['username', 'password']));
         }
     });
 
@@ -57,7 +58,7 @@ exports.signup = function(req, res, next) {
             usernmae: req.body.usernmae
         }
     };
-    utility.async.waterfall([
+    async.waterfall([
         function(cb) {
             User.findUser(options, function(err, data) {
                 if (err) {

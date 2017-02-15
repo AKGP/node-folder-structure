@@ -6,12 +6,52 @@ var utility = {
     async: async
 };
 
-utility.generateHash = function(password, cb) {
+/* 
+   This function is used for generate Unique String
+ */
+
+utility.generateUniqueString = function() {
+
+    var Puid = require('puid');
+    var puid = new Puid();
+    return puid.generate();
+};
+
+/**
+ * This function is used for generate Random number.
+ * @param  {Number}   length  This for number length.
+ * @param  {Function} cb      This callback function.
+ */
+utility.generateRandomNumber = function(length, cb) {
+    var codeString = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz12345678',
+        output = '',
+        index;
+    if (!length) {
+        length = 6;
+    }
+    for (var i = 0; i < length; i++) {
+        index = Math.floor(Math.random() * codeString.length);
+
+        if (index === 1) {
+            index = index - 1;
+        }
+        output += codeString[index];
+    }
+    output += "1aA@";
+    cb(output);
+};
+
+/**
+ * This function is returned the encrypt string 
+ * @param  {String}   value     The normal string 
+ * @param  {Function} cb        The callback function.
+ */
+utility.generateHash = function(value, cb) {
     bcrypt.genSalt(10, function(err, salt) {
         if (err) {
             return cb(err);
         } else {
-            bcrypt.hash(password, salt, function(err, hash) {
+            bcrypt.hash(value, salt, function(err, hash) {
                 if (err) {
                     cb(err);
                 } else {
@@ -27,6 +67,7 @@ utility.validatePassword = function(password, hash, done) {
         done(err, res);
     });
 };
+
 
 utility.isValidate = {
     email: function(email) {
@@ -48,6 +89,27 @@ utility.isValidate = {
     isUrl: function(input) {
         return /^(https?)?(:)(\/\/)(www.)?[a-zA-Z0-9_]+\.[a-zA-Z]+((\/([\w]+)?)*)?$/g.test(input);
     }
+};
+
+/**
+ * This function is used for remove confidential data from http response.
+ * @param  {Object} data This mongoose object 
+ * @param  {Array} arr   array field name which you want remove.
+ * @return {object}      This will return the desired object
+ */
+utility.removeConfidentialData = function(data, arr) {
+
+
+    var data = JSON.parse(JSON.stringify(data));
+
+    arr.forEach(function(each) {
+
+        if (data[each]) {
+            delete data[each]
+        }
+    });
+    return data;
+
 };
 
 module.exports = utility;
