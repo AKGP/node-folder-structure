@@ -4,11 +4,14 @@ var User = require('../../database/schema/user.js'),
 
 
 exports.login = function(req, res, next) {
+    var options = {
+        query: {
+            usernmae: req.body.usernmae
+        }
+    };
     utility.async.waterfall([
         function(cb) {
-            User.findUser({
-                usernmae: req.body.usernmae
-            }, function(err, data) {
+            User.findUser(options, function(err, data) {
                 if (err) {
                     cb(err);
                 } else {
@@ -36,9 +39,9 @@ exports.login = function(req, res, next) {
     ], function(err, data) {
         if (err) {
             if (err === 'INVALID_CREDENTIALS') {
-                res.responseError('CUSTOM_ERROR', 'INVALID_CREDENTIALS', 401);
+                res.responseError('CUSTOM_ERROR', 401, { customError: ['INVALID_CREDENTIALS'] });
             } else {
-                res.responseError('DATABASE_ERROR', 'DATABASE_ERROR', 500);
+                res.responseError('DATABASE_ERROR', 500, { databaseError: [err] });
             }
         } else {
             res.responseSuccess('LOGIN_SUCCESS', data);
@@ -49,11 +52,14 @@ exports.login = function(req, res, next) {
 
 
 exports.signup = function(req, res, next) {
+    var options = {
+        query: {
+            usernmae: req.body.usernmae
+        }
+    };
     utility.async.waterfall([
         function(cb) {
-            User.findUser({
-                usernmae: req.body.usernmae
-            }, function(err, data) {
+            User.findUser(options, function(err, data) {
                 if (err) {
                     cb(err);
                 } else {
@@ -92,9 +98,9 @@ exports.signup = function(req, res, next) {
     ], function(err, data) {
         if (err) {
             if (err === 'ACCOUNT_EXITS') {
-                res.responseError('CUSTOM_ERROR', 'ACCOUNT_EXITS', 401);
+                res.responseError('CUSTOM_ERROR', 401, { customError: ['ACCOUNT_EXITS'] });
             } else {
-                res.responseError('DATABASE_ERROR', 'DATABASE_ERROR', 402);
+                res.responseError('DATABASE_ERROR', 500, { databaseError: [err] });
             }
         } else {
             res.responseSuccess('SIGNUP_SUCCESS', data);

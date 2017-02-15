@@ -1,29 +1,44 @@
 'use strict';
 
 
+process.on('uncaughtException', function(err) {
+    if (err) {
+        console.log('This Error is occured in Runtime', err);
+    }
+});
+
 module.exports = function(req, res, next) {
 
     var response = {
-        success: false
+        success: false,
+        err: {
+            systemError: [],
+            databaseError: [],
+            validationError: [],
+            customError: []
+        }
     };
-    res.responseError = function(errorType, message, status) {
-        switch (message) {
+    res.responseError = function(errorType, status) {
+        switch (errorType) {
             case 'DATABASE_ERROR':
-                response.message = 'DATABASE_ERROR';
                 res.statusCode = status;
                 break;
             case 'CUSTOM_ERROR':
-                response.message = message;
                 res.statusCode = status;
                 break;
             default:
-                response.message = message;
                 res.statusCode = status;
                 break;
 
         }
-        if (arguments[3]) {
-            response.err = arguments[3];
+        if (arguments[2]) {
+            for (var key in arguments[2]) {
+                for (var key1 in response.err) {
+                    if (key === key1) {
+                        response.err[key1] = arguments[2][key]
+                    }
+                }
+            }
         }
         res.send(response);
     };
