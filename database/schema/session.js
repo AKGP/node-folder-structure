@@ -1,7 +1,7 @@
 'use strict';
 var mongoose = require('mongoose'),
     config = require('../../config.js'),
-    staticMethod = require('../methods/user');
+    staticMethod = require('../methods/session');
 
 
 var sessionSchema = new mongoose.Schema({

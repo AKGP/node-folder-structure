@@ -1,4 +1,5 @@
 var User = require('../../database/schema/user.js'),
+    Session = require('../../database/schema/session.js'),
     async = require('async'),
     utility = require('../../utility');
 
@@ -7,7 +8,7 @@ var User = require('../../database/schema/user.js'),
 exports.login = function(req, res, next) {
     var options = {
         query: {
-            usernmae: req.body.usernmae
+            username: req.body.username
         }
     };
     async.waterfall([
@@ -16,6 +17,7 @@ exports.login = function(req, res, next) {
                 if (err) {
                     cb(err);
                 } else {
+
                     if (data) {
                         cb(null, data);
                     } else {
@@ -36,6 +38,31 @@ exports.login = function(req, res, next) {
                     }
                 }
             });
+        },
+        function(data, cb) {
+            Session.findElemant({ query: { userId: data._id } }, function(err, sessionData) {
+                if (err) {
+                    res.responseError('DATABASE_ERROR', 500, { databaseError: [err] });
+                } else {
+                    if (sessionData) {
+                        req.activeUser = sessionData;
+                        res.responseSuccess('LOGIN_SUCCESS', utility.removeConfidentialData(data, ['username', 'password']), { token: sessionData.token });
+                    } else {
+                        var token = utility.generateUniqueString();
+                        Session.addValue({
+                            userId: data._id,
+                            token: token
+                        }, function(err, saveData) {
+                            if (err) {
+                                cb(err);
+                            } else {
+                                req.activeUser = saveData;
+                                res.responseSuccess('LOGIN_SUCCESS', utility.removeConfidentialData(data, ['username', 'password']), { token: token });
+                            }
+                        })
+                    }
+                }
+            })
         }
     ], function(err, data) {
         if (err) {
@@ -44,8 +71,6 @@ exports.login = function(req, res, next) {
             } else {
                 res.responseError('DATABASE_ERROR', 500, { databaseError: [err] });
             }
-        } else {
-            res.responseSuccess('LOGIN_SUCCESS', utility.removeConfidentialData(data, ['username', 'password']));
         }
     });
 
@@ -107,4 +132,38 @@ exports.signup = function(req, res, next) {
             res.responseSuccess('SIGNUP_SUCCESS', data);
         }
     });
+};
+
+
+exports.editProfile = function(req, res, next) {
+    var options = {
+        query: req.body.userId,
+        update: {
+            name: req.body.name
+        }
+    }
+    User.editUser(options, function(err, data) {
+        if (err) {
+            res.responseError('DATABASE_ERROR', 500, { databaseError: [err] });
+        } else {
+            res.responseSuccess('UPDATE_SUCCESS', data);
+        }
+    })
+};
+
+exports.searchUser = function(req, res, next) {
+    var options = {
+        query: {}
+    };
+    User.findUsers(options, function(err, data) {
+        if (err) {
+            res.responseError('DATABASE_ERROR', 500, { databaseError: [err] });
+        } else {
+            if (data.length) {
+                res.responseError('CUSTOM_ERROR', 401, { customError: ['NOT_FOUND'] });
+            } else {
+                res.responseSuccess('UPDATE_SUCCESS', data);
+            }
+        }
+    })
 };

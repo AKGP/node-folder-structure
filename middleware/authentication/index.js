@@ -2,7 +2,7 @@
 
 var Session = require('../../database/schema/session.js');
 
-module.exports = function(req, res, next) {
+module.exports.checkAuthentication = function(req, res, next) {
     var token = req.query.token || req.params.token || req.body.token || req.headers['x-access-token'];
     if (req.session.user) {
         next();

@@ -2,8 +2,8 @@
 module.exports = function(schema) {
 
 
-    schema.statics.findOne = function(options, cb) {
-
+    schema.statics.findElemant = function(options, cb) {
+        console.log('options ', options);
         var query = this.findOne(options.query);
 
         if (options.populateQuery) {

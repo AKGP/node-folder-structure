@@ -40,6 +40,19 @@ module.exports = function(schema) {
         return newEntry.save(cb);
     };
 
+    schema.statics.editUser = function(params, cb) {
+        if (params.options) {
+            return this.update(params.query, params.update, params.options, cb)
+        } else {
+            return this.update(params.query, params.update, cb);
+        }
+
+    }
+    schema.statics.removeElement = function(params, cb) {
+        return this.remove(params.query, cb);
+    }
+
+
     return schema;
 
 };
