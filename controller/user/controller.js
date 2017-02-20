@@ -1,9 +1,11 @@
 var User = require('../../database/schema/user.js'),
     Session = require('../../database/schema/session.js'),
     async = require('async'),
+    helper = require('../helper.js'),
     utility = require('../../utility');
 
 
+var UserHelper = helper.user;
 
 exports.login = function(req, res, next) {
     var options = {
@@ -11,7 +13,7 @@ exports.login = function(req, res, next) {
             username: req.body.username
         }
     };
-    async.waterfall([
+    /* async.waterfall([
         function(cb) {
             User.findUser(options, function(err, data) {
                 if (err) {
@@ -59,10 +61,10 @@ exports.login = function(req, res, next) {
                                 req.activeUser = saveData;
                                 res.responseSuccess('LOGIN_SUCCESS', utility.removeConfidentialData(data, ['username', 'password']), { token: token });
                             }
-                        })
+                        });
                     }
                 }
-            })
+            });
         }
     ], function(err, data) {
         if (err) {
@@ -73,6 +75,26 @@ exports.login = function(req, res, next) {
             }
         }
     });
+*/
+
+    function errorHandler(err) {
+        if (err) {
+            if (err === 'INVALID_CREDENTIALS') {
+                res.responseError('CUSTOM_ERROR', 401, { customError: ['INVALID_CREDENTIALS'] });
+            } else {
+                res.responseError('DATABASE_ERROR', 500, { databaseError: [err] });
+            }
+        }
+    }
+    UserHelper.findUser({ options: options, requestBody: req.body })
+        .then(UserHelper.checkpassword)
+        .then(UserHelper.sessionHandle)
+        .then(function(data) {
+            req.activeUser = data.responseData;
+            res.responseSuccess('LOGIN_SUCCESS', utility.removeConfidentialData(data.responseData, ['username', 'password']), { token: data.sessionData.token });
+        })
+        .catch(errorHandler);
+
 
 };
 
@@ -160,7 +182,7 @@ exports.searchUser = function(req, res, next) {
             res.responseError('DATABASE_ERROR', 500, { databaseError: [err] });
         } else {
             if (data.length) {
-                res.responseError('CUSTOM_ERROR', 401, { customError: ['NOT_FOUND'] });
+                res.responseError('CUSTOM_ERROR ', 401, { customError: ['NOT_FOUND '] });
             } else {
                 res.responseSuccess('UPDATE_SUCCESS', data);
             }
