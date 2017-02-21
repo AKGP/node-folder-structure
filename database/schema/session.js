@@ -14,12 +14,15 @@ var sessionSchema = new mongoose.Schema({
         },
         createdAt: {
             type: Date,
-            expires: 3600,
+
+
+            expires: config.tokenExpireTime, // in seconds
+
             default: Date.now()
         }
     }),
 
     Session = mongoose.model('session', staticMethod(sessionSchema));
 
-// sessionSchema.index({ "createdAt": 1 }, { expireAfterSeconds: config.tokenExpireTime });
+
 module.exports = Session;

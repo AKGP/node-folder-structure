@@ -11,60 +11,69 @@ exports.login = function(req, res, next) {
             username: req.body.username
         }
     };
-    async.waterfall([
-        function(cb) {
-            User.findUser(options, function(err, data) {
-                if (err) {
-                    cb(err);
-                } else {
 
+    function findUser(context) {
+        var promise = new Promise(function(resolve, reject) {
+            User.findUser(context.options, function(err, data) {
+                if (err) {
+                    reject(err);
+                } else {
                     if (data) {
-                        cb(null, data);
+                        resolve({ userData: data, requestBody: context.requestBody });
                     } else {
-                        cb('INVALID_CREDENTIALS');
+                        reject('INVALID_CREDENTIALS');
                     }
                 }
             });
-        },
-        function(data, cb) {
-            utility.validatePassword(req.body.password, data.password, function(err, res) {
+        });
+        return promise;
+    };
+
+    function checkpassword(context) {
+        var promise = new Promise(function(resolve, reject) {
+            utility.validatePassword(context.requestBody.password, context.userData.password, function(err, res) {
                 if (err) {
-                    cb(err);
+                    reject(err);
                 } else {
                     if (!res) {
-                        cb('INVALID_CREDENTIALS');
+                        resolve({ userData: context.userData });
                     } else {
-                        cb(null, data);
+                        reject('INVALID_CREDENTIALS');
                     }
                 }
             });
-        },
-        function(data, cb) {
-            Session.findElemant({ query: { userId: data._id } }, function(err, sessionData) {
+        });
+        return promise;
+    };
+
+    function sessionHandle(context) {
+        var promise = new Promise(function(resolve, reject) {
+            Session.findElemant({ query: { userId: context.userData._id } }, function(err, sessionData) {
                 if (err) {
-                    res.responseError('DATABASE_ERROR', 500, { databaseError: [err] });
+                    reject(err);
                 } else {
                     if (sessionData) {
-                        req.activeUser = sessionData;
-                        res.responseSuccess('LOGIN_SUCCESS', utility.removeConfidentialData(data, ['username', 'password']), { token: sessionData.token });
+                        resolve({ responseData: context.userData, sessionData: sessionData });
                     } else {
                         var token = utility.generateUniqueString();
                         Session.addValue({
-                            userId: data._id,
+                            userId: context.userData._id,
                             token: token
                         }, function(err, saveData) {
                             if (err) {
-                                cb(err);
+                                reject(err);
                             } else {
-                                req.activeUser = saveData;
-                                res.responseSuccess('LOGIN_SUCCESS', utility.removeConfidentialData(data, ['username', 'password']), { token: token });
+                                resolve({ responseData: context.userData, sessionData: saveData });
                             }
-                        })
+                        });
                     }
                 }
-            })
-        }
-    ], function(err, data) {
+            });
+        });
+        return promise;
+    };
+
+    function errorHandler(err) {
         if (err) {
             if (err === 'INVALID_CREDENTIALS') {
                 res.responseError('CUSTOM_ERROR', 401, { customError: ['INVALID_CREDENTIALS'] });
@@ -72,7 +81,16 @@ exports.login = function(req, res, next) {
                 res.responseError('DATABASE_ERROR', 500, { databaseError: [err] });
             }
         }
-    });
+    };
+    findUser({ options: options, requestBody: req.body })
+        .then(checkpassword)
+        .then(sessionHandle)
+        .then(function(data) {
+            req.activeUser = data.responseData;
+            res.responseSuccess('LOGIN_SUCCESS', utility.removeConfidentialData(data.responseData, ['username', 'password']), { token: data.sessionData.token });
+        })
+        .catch(errorHandler);
+
 
 };
 
@@ -83,55 +101,76 @@ exports.signup = function(req, res, next) {
             usernmae: req.body.usernmae
         }
     };
-    async.waterfall([
-        function(cb) {
-            User.findUser(options, function(err, data) {
+
+    function findUser(context) {
+        var promise = new Promise(function(resolve, reject) {
+            User.findUser(context.options, function(err, data) {
                 if (err) {
-                    cb(err);
+                    reject(err);
                 } else {
                     if (data) {
-                        cb('ACCOUNT_EXITS');
+                        reject('ACCOUNT_EXITS');
                     } else {
-                        cb(null, data);
+                        resolve({ requestBody: req.body });
                     }
                 }
             });
-        },
-        function(data, cb) {
-            utility.generateHash(req.body.password, function(err, hash) {
+        });
+        return promise;
+    };
+
+    function generateHash(context) {
+        var promise = new Promise(function(resolve, reject) {
+            utility.generateHash(context.requestBody.password, function(err, hash) {
                 if (err) {
-                    cb(err);
+                    reject(err);
                 } else {
-                    cb(null, hash);
+                    resolve({ hash: hash })
                 }
             });
-        },
-        function(hash, cb) {
+        });
+        return promise;
+    };
+
+    function addUser(context) {
+        var promise = new Promise(function(resolve, reject) {
             User.addUser({
-                password: hash,
+                password: context.hash,
                 name: req.body.name,
                 address: req.body.address,
                 username: req.body.email,
                 email: req.body.email
             }, function(err, data) {
                 if (err) {
-                    cb(err);
+                    reject(err);
                 } else {
-                    cb(null, data);
+                    resolve({ responseData: data })
                 }
             });
-        }
-    ], function(err, data) {
+        });
+        return promise;
+    };
+
+
+    function errorHandler(err) {
         if (err) {
             if (err === 'ACCOUNT_EXITS') {
                 res.responseError('CUSTOM_ERROR', 401, { customError: ['ACCOUNT_EXITS'] });
             } else {
                 res.responseError('DATABASE_ERROR', 500, { databaseError: [err] });
             }
-        } else {
-            res.responseSuccess('SIGNUP_SUCCESS', data);
         }
-    });
+    };
+
+    findUser({ options: options })
+        .then(generateHash)
+        .then(addUser)
+        .then(function(data) {
+            res.responseSuccess('SIGNUP_SUCCESS', context.responseData);
+        })
+        .catch(errorHandler)
+
+
 };
 
 
@@ -160,9 +199,9 @@ exports.searchUser = function(req, res, next) {
             res.responseError('DATABASE_ERROR', 500, { databaseError: [err] });
         } else {
             if (data.length) {
-                res.responseError('CUSTOM_ERROR', 401, { customError: ['NOT_FOUND'] });
+                res.responseSuccess('ALL USERS', data);
             } else {
-                res.responseSuccess('UPDATE_SUCCESS', data);
+                res.responseError('CUSTOM_ERROR ', 401, { customError: ['NOT_FOUND '] });
             }
         }
     })
