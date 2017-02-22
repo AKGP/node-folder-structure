@@ -1,11 +1,12 @@
 'use strict';
 
-
-// process.on('uncaughtException', function(err) {
-//     if (err) {
-//         console.log('This Error is occured in Runtime', err);
-//     }
-// });
+var langFile = require('../../lang'),
+    async = require('async');
+process.on('uncaughtException', function(err) {
+    if (err) {
+        console.log('This Error is occured in Runtime', err);
+    }
+});
 
 module.exports = function(req, res, next) {
 

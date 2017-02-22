@@ -1,6 +1,7 @@
 var User = require('../../database/schema/user.js'),
     Session = require('../../database/schema/session.js'),
     async = require('async'),
+    langfile = require('../../lang'),
     utility = require('../../utility');
 
 
@@ -19,6 +20,7 @@ exports.login = function(req, res, next) {
                     reject(err);
                 } else {
                     if (data) {
+
                         resolve({ userData: data, requestBody: context.requestBody });
                     } else {
                         reject('INVALID_CREDENTIALS');
@@ -36,6 +38,7 @@ exports.login = function(req, res, next) {
                     reject(err);
                 } else {
                     if (!res) {
+
                         resolve({ userData: context.userData });
                     } else {
                         reject('INVALID_CREDENTIALS');
@@ -53,6 +56,7 @@ exports.login = function(req, res, next) {
                     reject(err);
                 } else {
                     if (sessionData) {
+
                         resolve({ responseData: context.userData, sessionData: sessionData });
                     } else {
                         var token = utility.generateUniqueString();
@@ -76,7 +80,7 @@ exports.login = function(req, res, next) {
     function errorHandler(err) {
         if (err) {
             if (err === 'INVALID_CREDENTIALS') {
-                res.responseError('CUSTOM_ERROR', 401, { customError: ['INVALID_CREDENTIALS'] });
+                res.responseError('CUSTOM_ERROR', 401, { customError: [langfile('INVALID_CREDENTIALS', 'en-us')] });
             } else {
                 res.responseError('DATABASE_ERROR', 500, { databaseError: [err] });
             }
@@ -155,7 +159,7 @@ exports.signup = function(req, res, next) {
     function errorHandler(err) {
         if (err) {
             if (err === 'ACCOUNT_EXITS') {
-                res.responseError('CUSTOM_ERROR', 401, { customError: ['ACCOUNT_EXITS'] });
+                res.responseError('CUSTOM_ERROR', 401, { customError: [langfile('ACCOUNT_EXITS', 'en-us')] });
             } else {
                 res.responseError('DATABASE_ERROR', 500, { databaseError: [err] });
             }
@@ -201,7 +205,7 @@ exports.searchUser = function(req, res, next) {
             if (data.length) {
                 res.responseSuccess('ALL USERS', data);
             } else {
-                res.responseError('CUSTOM_ERROR ', 401, { customError: ['NOT_FOUND '] });
+                res.responseError('CUSTOM_ERROR ', 401, { customError: [langfile('NOT_FOUND', 'en-us')] });
             }
         }
     })
