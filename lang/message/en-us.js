@@ -3,21 +3,21 @@
 
 module.exports = {
 
-    // Please maintain the Key value in alphabatic order.
+  // Please maintain the Key value in alphabatic order.
 
 
-    ACCOUNT_EXITS: 'We have found the existing account with this credential',
+  ACCOUNT_EXITS: 'We have found an existing account with this credential',
 
 
 
-    INVALID_CREDENTIALS: 'You have entered the wrong credentials',
+  INVALID_CREDENTIALS: 'You have entered the wrong credentials',
 
-    LOGIN_SUCCESS: 'You are successfully logged in',
+  LOGIN_SUCCESS: 'You are successfully logged in',
 
-    NOT_FOUND: 'Data is not found in system',
+  NOT_FOUND: 'Data is not found in system',
 
-    SIGNUP_SUCCESS: 'You have signed up successfully with this system',
+  SIGNUP_SUCCESS: 'You have signed up successfully with this system',
 
-    UPDATE_SUCCESS: 'You have updated the value successfully'
+  UPDATE_SUCCESS: 'You have updated the value successfully'
 
 }
